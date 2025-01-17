@@ -1,5 +1,6 @@
 /* global HTMLElement, WIDGETS, utils */
-window.WIDGETS = { // GLOBAL WIDGETS OBJECT
+window.WIDGETS = {
+  // GLOBAL WIDGETS OBJECT
   // all named/keyed instantiated widgets are properties of this global object
   loaded: [], // list of filenames of all currently loaded widgets
   instantiated: [], // list of keys of all currently instantiated widgets
@@ -11,7 +12,9 @@ window.WIDGETS = { // GLOBAL WIDGETS OBJECT
     s.onload = () => {
       WIDGETS.loaded.push(dirname)
       const words = dirname.split('-')
-      const className = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')
+      const className = words
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join('')
       // instantiate widget unless skipAutoInstantiation is set to true
       if (window[className].skipAutoInstantiation !== true) {
         const wig = new window[className]()
@@ -19,7 +22,9 @@ window.WIDGETS = { // GLOBAL WIDGETS OBJECT
         WIDGETS[wig.key] = wig
         WIDGETS.instantiated.push(wig.key)
         if (cbfunc) cbfunc(wig)
-      } else { if (cbfunc) cbfunc() }
+      } else {
+        if (cbfunc) cbfunc()
+      }
     }
     s.onerror = () => {
       const error = `widgets/${dirname} does not exist`
@@ -28,7 +33,7 @@ window.WIDGETS = { // GLOBAL WIDGETS OBJECT
     }
     document.body.appendChild(s)
   },
-  create: (opts) => {
+  create: opts => {
     opts = opts || {}
     if (!opts.type) opts.type = 'Widget'
     const wig = new window[opts.type](opts)
@@ -45,7 +50,7 @@ window.WIDGETS = { // GLOBAL WIDGETS OBJECT
     if (WIDGETS.instantiated.includes(key)) WIDGETS[key].open(cb)
     else WIDGETS.load(key, w => w.open(cb))
   },
-  close: (key) => {
+  close: key => {
     if (WIDGETS.instantiated.includes(key)) WIDGETS[key].close()
     else console.error(`WIDGETS: ${key} was never instantiated`)
   }
@@ -80,10 +85,13 @@ class Widget {
     this._key = opts.key
     this._title = opts.title || 'netnet widget'
     this._innerHTML = opts.innerHTML || ''
-    this._listed = (typeof opts.listed === 'boolean') ? opts.listed : true
-    this._resizable = (typeof opts.resizable === 'boolean') ? opts.resizable : true
-    this._closable = (typeof opts.closable === 'boolean') ? opts.closable : true
-    this._expandable = (typeof opts.expandable === 'boolean') ? opts.expandable : false
+    this._listed = typeof opts.listed === 'boolean' ? opts.listed : true
+    this._resizable =
+      typeof opts.resizable === 'boolean' ? opts.resizable : true
+    this._closable = typeof opts.closable === 'boolean' ? opts.closable : true
+    this._expandable =
+      typeof opts.expandable === 'boolean' ? opts.expandable : false
+    this._hidden = opts.hidden || false
 
     this.mousedown = false
 
@@ -96,20 +104,24 @@ class Widget {
     this._createWindow()
 
     const s = ['top', 'right', 'bottom', 'left', 'zIndex', 'width', 'height']
-    s.forEach(p => { this[`_${p}`] = null })
+    s.forEach(p => {
+      this[`_${p}`] = null
+    })
     for (const prop in opts) if (s.includes(prop)) this._css(prop, opts[prop])
 
-    window.addEventListener('mousedown', (e) => this._mouseDown(e), true)
-    window.addEventListener('mouseup', (e) => this._mouseUp(e), true)
-    window.addEventListener('mousemove', (e) => this._mouseMove(e), true)
-    window.addEventListener('mousemove', (e) => utils.updateShadow(e, this.ele))
+    window.addEventListener('mousedown', e => this._mouseDown(e), true)
+    window.addEventListener('mouseup', e => this._mouseUp(e), true)
+    window.addEventListener('mousemove', e => this._mouseMove(e), true)
+    window.addEventListener('mousemove', e => utils.updateShadow(e, this.ele))
   }
 
   // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
   // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸ properties
   // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
 
-  get key () { return this._key }
+  get key () {
+    return this._key
+  }
   set key (v) {
     if (typeof v !== 'string') {
       return console.error('Widget: key property must be set to a string')
@@ -118,7 +130,9 @@ class Widget {
     }
   }
 
-  get listed () { return this._listed }
+  get listed () {
+    return this._listed
+  }
   set listed (v) {
     if (typeof v !== 'boolean') {
       return console.error('Widget: listed property must be set to a boolean')
@@ -127,13 +141,23 @@ class Widget {
     }
   }
 
-  get resizable () { return this._resizable }
-  set resizable (v) { this._resizable = v }
+  get resizable () {
+    return this._resizable
+  }
+  set resizable (v) {
+    this._resizable = v
+  }
 
-  get opened () { return this.ele.style.visibility === 'visible' }
-  set opened (v) { console.error('Widget: opened property is read only') }
+  get opened () {
+    return this.ele.style.visibility === 'visible'
+  }
+  set opened (v) {
+    console.error('Widget: opened property is read only')
+  }
 
-  get title () { return this._title }
+  get title () {
+    return this._title
+  }
   set title (v) {
     if (typeof v !== 'string') {
       return console.error('Widget: title property must be set to a string')
@@ -149,7 +173,9 @@ class Widget {
     }
   }
 
-  get innerHTML () { return this._innerHTML }
+  get innerHTML () {
+    return this._innerHTML
+  }
   set innerHTML (v) {
     if (typeof v !== 'string' && !(v instanceof HTMLElement)) {
       const m = 'innerHTML string or an instanceof HTMLElement'
@@ -163,64 +189,114 @@ class Widget {
     }
   }
 
-  get closable () { return this._closable }
+  get closable () {
+    return this._closable
+  }
   set closable (v) {
     this._closable = v
     const close = v ? '<span class="close">✖</span>' : ''
     const expnd = this.expandable ? '<span class="expand">⇱</span>' : ''
-    this.ele.querySelector('.widget__top__close').innerHTML = `${expnd} ${close}`
+    this.ele.querySelector(
+      '.widget__top__close'
+    ).innerHTML = `${expnd} ${close}`
     this._setupTitleBarButtons(true)
   }
 
-  get expandable () { return this._expandable }
+  get expandable () {
+    return this._expandable
+  }
   set expandable (v) {
     this._expandable = v
     const expnd = v ? '<span class="expand">⇱</span>' : ''
     const close = this.closable ? '<span class="close">✖</span>' : ''
-    this.ele.querySelector('.widget__top__close').innerHTML = `${expnd} ${close}`
+    this.ele.querySelector(
+      '.widget__top__close'
+    ).innerHTML = `${expnd} ${close}`
     this._setupTitleBarButtons(true)
   }
 
-  get left () { return parseInt(this.ele.style.left) }
-  set left (v) { this._css('left', v) }
+  get left () {
+    return parseInt(this.ele.style.left)
+  }
+  set left (v) {
+    this._css('left', v)
+  }
 
-  get top () { return parseInt(this.ele.style.top) }
-  set top (v) { this._css('top', v) }
+  get top () {
+    return parseInt(this.ele.style.top)
+  }
+  set top (v) {
+    this._css('top', v)
+  }
 
-  get right () { return window.innerWidth - this.width - this.left }
-  set right (v) { this._css('right', v) }
+  get right () {
+    return window.innerWidth - this.width - this.left
+  }
+  set right (v) {
+    this._css('right', v)
+  }
 
-  get bottom () { return window.innerHeight - this.height - this.top }
-  set bottom (v) { this._css('bottom', v) }
+  get bottom () {
+    return window.innerHeight - this.height - this.top
+  }
+  set bottom (v) {
+    this._css('bottom', v)
+  }
 
-  get zIndex () { return parseInt(this.ele.style.zIndex) }
-  set zIndex (v) { this._css('zIndex', v) }
+  get zIndex () {
+    return parseInt(this.ele.style.zIndex)
+  }
+  set zIndex (v) {
+    this._css('zIndex', v)
+  }
 
-  get width () { return this.ele.offsetWidth }
-  set width (v) { this._css('width', v) }
+  get width () {
+    return this.ele.offsetWidth
+  }
+  set width (v) {
+    this._css('width', v)
+  }
 
-  get height () { return this.ele.offsetHeight }
-  set height (v) { this._css('height', v) }
+  get height () {
+    return this.ele.offsetHeight
+  }
+  set height (v) {
+    this._css('height', v)
+  }
+
+  get hidden () {
+    return this._hidden
+  }
+  set hidden (v) {
+    this._hidden = !!v // Ensure it's a boolean
+    this.ele.style.visibility = this._hidden ? 'hidden' : 'visible' // Update visibility
+  }
 
   // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
   // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.••.¸¸¸.•*•. public methods
   // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
 
   $ (selector) {
-    const e = this.ele.querySelector('.widget__inner-html').querySelectorAll(selector)
+    const e = this.ele
+      .querySelector('.widget__inner-html')
+      .querySelectorAll(selector)
     if (e.length > 1) return e
     else return e[0]
   }
 
   on (eve, cb) {
-    if (!this.events[eve]) { this.events[eve] = [] }
+    if (!this.events[eve]) {
+      this.events[eve] = []
+    }
     this.events[eve].push(cb)
   }
 
   emit (eve, data) {
     if (this.events[eve] instanceof Array) {
       this.events[eve].forEach((cb, i) => {
-        data.unsubscribe = () => { this.events[eve].splice(i, 1) }
+        data.unsubscribe = () => {
+          this.events[eve].splice(i, 1)
+        }
         cb(data)
       })
     }
@@ -303,8 +379,10 @@ class Widget {
 
     const edge = this.ele.offsetLeft + this.ele.offsetWidth
     if (this.ele.offsetLeft < 2) this.update({ left: 10 }, 500)
-    else if (edge > window.innerWidth &&
-      this.ele.offsetWidth + 10 < window.innerWidth) {
+    else if (
+      edge > window.innerWidth &&
+      this.ele.offsetWidth + 10 < window.innerWidth
+    ) {
       const l = window.innerWidth - this.ele.offsetWidth - 10
       this.update({ left: l }, 500)
     }
@@ -314,9 +392,13 @@ class Widget {
     let z = 100
     const allWidgets = WIDGETS.list()
       .filter(w => w.key !== this.key)
-      .sort((a, b) => { return parseFloat(a.zIndex) - parseFloat(b.zIndex) })
+      .sort((a, b) => {
+        return parseFloat(a.zIndex) - parseFloat(b.zIndex)
+      })
 
-    allWidgets.forEach(w => { w.zIndex = ++z })
+    allWidgets.forEach(w => {
+      w.zIndex = ++z
+    })
     this.zIndex = ++z
   }
 
@@ -334,11 +416,11 @@ class Widget {
   createSlider (opts) {
     opts = opts || {}
     const el = document.createElement('code-slider')
-    el.value = (typeof opts.value === 'undefined') ? 50 : opts.value
+    el.value = typeof opts.value === 'undefined' ? 50 : opts.value
     el.change = opts.change || function () {}
-    el.min = (typeof opts.min === 'undefined') ? 1 : opts.min
-    el.max = (typeof opts.max === 'undefined') ? 255 : opts.max
-    el.step = (typeof opts.step === 'undefined') ? 1 : opts.step
+    el.min = typeof opts.min === 'undefined' ? 1 : opts.min
+    el.max = typeof opts.max === 'undefined' ? 255 : opts.max
+    el.step = typeof opts.step === 'undefined' ? 1 : opts.step
     el.label = opts.label || ''
     el.bubble = opts.bubble
     el.background = opts.background || 'var(--netizen-meta)'
@@ -358,16 +440,19 @@ class Widget {
 
     if (matches) {
       // store CSS function names
-      const funcs = line[1].split(' ')
+      const funcs = line[1]
+        .split(' ')
         .filter(item => item.includes('('))
         .map(item => item.split('(')[0])
 
       // create string version of all CSS vals (including non functions)
       let valueArr = line[1]
-      matches.forEach(m => { valueArr = valueArr.replace(m, '') })
+      matches.forEach(m => {
+        valueArr = valueArr.replace(m, '')
+      })
 
       // create mutli-dimentoinal-array of CSS function arguments
-      matches = matches.map((item) => {
+      matches = matches.map(item => {
         item = item.replace(/[()]/g, '')
         return item.split(',')
       })
@@ -378,7 +463,8 @@ class Widget {
 
       // interweave non-function values && function values together
       let count = 0
-      valueArr = valueArr.split(' ')
+      valueArr = valueArr
+        .split(' ')
         .filter(el => el.trim().length > 0)
         .map(el => el.replace(';', ''))
         .map(v => {
@@ -391,7 +477,8 @@ class Widget {
 
       parsedCode.value = valueArr
     } else {
-      const valueArr = line[1].split(' ')
+      const valueArr = line[1]
+        .split(' ')
         .filter(el => el.trim().length > 0)
         .map(el => el.replace(';', ''))
 
@@ -459,16 +546,25 @@ class Widget {
 
     // marquee title logic
     const titleWidth = this.ele.querySelector('.widget__top__title').clientWidth
-    const titleSpanWidth = this.ele.querySelector('.widget__top__title__txt').clientWidth
+    const titleSpanWidth = this.ele.querySelector(
+      '.widget__top__title__txt'
+    ).clientWidth
     if (titleSpanWidth > titleWidth) {
-      this.ele.querySelector('.widget__top__title').classList.add('widget__top__title--marquee')
-      this.ele.querySelector('.widget__top__title__txt').style.animationDelay = `${Math.random() * 3}s`
+      this.ele
+        .querySelector('.widget__top__title')
+        .classList.add('widget__top__title--marquee')
+      this.ele.querySelector(
+        '.widget__top__title__txt'
+      ).style.animationDelay = `${Math.random() * 3}s`
     } else {
-      this.ele.querySelector('.widget__top__title').classList.remove('widget__top__title--marquee')
+      this.ele
+        .querySelector('.widget__top__title')
+        .classList.remove('widget__top__title--marquee')
     }
   }
 
   _display (value, callback) {
+    if (this._hidden) return
     if (value === 'visible') {
       this.ele.style.animation = 'openBounce 0.3s ease forwards'
     } else {
@@ -485,19 +581,20 @@ class Widget {
     const p = ['top', 'right', 'bottom', 'left']
     const s = ['width', 'height']
     if (s.includes(prop)) {
-      this.ele.style[prop] = (typeof val === 'number') ? `${val}px` : val
+      this.ele.style[prop] = typeof val === 'number' ? `${val}px` : val
     } else if (p.includes(prop)) {
       if (prop === 'left' || prop === 'right') {
         const width = parseInt(this.ele.style.width)
-          ? parseInt(this.ele.style.width) : this.width
-        const left = (prop === 'left')
-          ? val : window.innerWidth - val - width
+          ? parseInt(this.ele.style.width)
+          : this.width
+        const left = prop === 'left' ? val : window.innerWidth - val - width
         this.ele.style.left = `${left}px`
-      } else { // top || bottom
+      } else {
+        // top || bottom
         const height = parseInt(this.ele.style.height)
-          ? parseInt(this.ele.style.height) : this.height
-        const top = (prop === 'top')
-          ? val : window.innerHeight - val - height
+          ? parseInt(this.ele.style.height)
+          : this.height
+        const top = prop === 'top' ? val : window.innerHeight - val - height
         this.ele.style.top = `${top}px`
       }
     } else {
