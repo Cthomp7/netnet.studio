@@ -17,35 +17,36 @@ class TutorialMaker2 extends Widget {
       'tutorial-maker-popout',
       'width=600,height=400'
     )
+
+    this.popout.addEventListener('load', () => {
+      this.popoutReady = true
+      // this.sendToPopout('SOME_MESSAGE_TYPE', { foo: 'bar' })
+    })
+  }
+
+  sendToPopout (type, data) {
+    if (!this.popout || this.popout.closed) {
+      console.warn('Popout window is not available')
+      return
+    }
+
+    this.popout.postMessage(
+      {
+        type,
+        data
+      },
+      '*'
+    )
   }
 
   addMessageListener () {
     window.addEventListener('message', event => {
       const { data, type } = event.data
-      if (type === 'TM_METADATA_DOWNLOAD') {
-        this.downloadZip(data)
-      } else if (type === 'TM_METADATA_UPLOAD') {
-        this.extractZip(data)
+      if (type === 'CHANGE_NETNET_LAYOUT') {
+        console.log('NNW.layout: ', NNW.layout)
+        NNW.layout = data.layout
       }
     })
-  }
-
-  downloadZip (data) {
-    try {
-      const zip = new JSZip()
-      zip.file('metadata.json', JSON.stringify(data, null, 2))
-
-      zip.generateAsync({ type: 'blob' }).then(content => {
-        const link = document.createElement('a')
-        link.href = URL.createObjectURL(content)
-        link.download = 'metadata.zip'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-      })
-    } catch (error) {
-      console.error('Error parsing JSON:', error)
-    }
   }
 }
 

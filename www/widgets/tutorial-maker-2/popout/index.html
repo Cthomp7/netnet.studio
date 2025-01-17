@@ -9,10 +9,32 @@
         padding: 10px;
         border: 1px dashed #ccc;
       }
+      
+      .layout-section {
+        margin-bottom: 20px;
+        padding: 10px;
+      }
+      
+      select {
+        padding: 5px;
+        margin: 5px 0;
+      }
     </style>
   </head>
   <body>
     <h1>Tutorial Maker 2</h1>
+    
+    <div class="layout-section">
+      <label for="layoutSelect">Layout:</label>
+      <select id="layoutSelect">
+        <option value="dock-left">Dock Left</option>
+        <option value="dock-bottom">Dock Bottom</option>
+        <option value="separate-window" selected>Separate Window</option>
+        <option value="full-screen">Full Screen</option>
+        <option value="welcome">Welcome</option>
+      </select>
+    </div>
+
     <div class="upload-section">
       <p>Upload ZIP file with metadata.json:</p>
       <input 
@@ -37,8 +59,8 @@
     </form>
 
     <script>
-      function postDownloadMessage(data) {
-        window.opener.postMessage({ type: 'TM_METADATA_DOWNLOAD', data: data }, '*');
+      function changeNetNet(data) {
+        window.opener.postMessage({ type: 'CHANGE_NETNET_LAYOUT', data: data }, '*');
       }
 
       function fillMetadata(metadata) {
@@ -97,6 +119,23 @@
         }
       }
 
+      async function downloadZip(data, filename = 'metadata.zip') {
+        try {
+          const zip = new JSZip()
+          zip.file('metadata.json', JSON.stringify(data, null, 2))
+
+          const content = await zip.generateAsync({ type: 'blob' })
+          const link = document.createElement('a')
+          link.href = URL.createObjectURL(content)
+          link.download = filename
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+        } catch (error) {
+          console.error('Error creating zip:', error)
+        }
+      }
+
       function handleFormSubmit(event) {
         event.preventDefault();
         event.stopPropagation();
@@ -110,13 +149,30 @@
           title
         };
 
-        window.postDownloadMessage(data);
+        downloadZip(data);
       }
+
+      function handleLayoutChange(event) {
+        const layout = event.target.value;
+        changeNetNet({ layout });
+      }
+
+      window.addEventListener('message', event => {
+        const { type, data } = event.data
+        console.log('Received message:', { type, data });
+        switch (type) {
+          case 'SOME_MESSAGE_TYPE':
+            break
+        }
+      })
 
       window.onload = function() {
         const zipUpload = document.getElementById('zipUpload');
         zipUpload.addEventListener('change', handleFileUpload);
         document.getElementById('dataForm').onsubmit = handleFormSubmit;
+        
+        const layoutSelect = document.getElementById('layoutSelect');
+        layoutSelect.addEventListener('change', handleLayoutChange);
       };
     </script>
   </body>
