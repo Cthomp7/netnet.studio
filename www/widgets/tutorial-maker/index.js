@@ -3,7 +3,7 @@ class TutorialMaker extends Widget {
   constructor (opts) {
     super(opts)
     this.key = 'tutorial-maker'
-    this.listed = false
+    this.listed = true
 
     this.keyframes = {}
     this.widgets = {}

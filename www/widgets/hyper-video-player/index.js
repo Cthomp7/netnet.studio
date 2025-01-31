@@ -1,14 +1,19 @@
 /* global Widget, WIDGETS, NNE, NNW, Convo, utils */
 class HyperVideoPlayer extends Widget {
   constructor (opts) {
+    opts = opts || {}
     super(opts)
-    this.key = 'hyper-video-player'
-    this.listed = false
+    this._opts = opts
+    this.key = opts.key || 'hyper-video-player'
+    this.title = opts.title || 'HyperVideo Player'
+    this.listed = true
     this.duration = null
 
     this.keyframes = {}
     this.timecodes = []
     this.sid = null // play session id
+
+    this._createHTML(opts)
 
     this.on('open', () => {
       this.sid = Date.now().toString(36) + Math.random().toString(36).substr(2)
@@ -16,37 +21,82 @@ class HyperVideoPlayer extends Widget {
 
     this.on('close', () => {
       if (!this.video.paused) this.pause()
-      const tg = WIDGETS['learning-guide']
-      const tm = WIDGETS['tutorial-maker']
-      if (tm && tm.opened) tm.close()
-      else if (tg && tg.metadata) {
-        tg.quit(); tg.open()
-        // tg.update({ bottom: 20, right: 20 }, 500)
-        if (this.logger) this.logger.reset()
+
+      if (WIDGETS['learning-guide'] && WIDGETS['learning-guide'].metadata) {
+        const tg = WIDGETS['learning-guide']
+        const tm = WIDGETS['tutorial-maker']
+        if (tm && tm.opened) tm.close()
+        else if (tg && tg.metadata) {
+          tg.quit()
+          tg.open()
+          if (this.logger) this.logger.reset()
+        }
+        NNE.readOnly = false
+        if (window.convo && window.convo.id === 'introducing-tutorial') {
+          window.convo.hide()
+        }
       }
-      NNE.readOnly = false
-      if (window.convo.id === 'introducing-tutorial') window.convo.hide()
       this.sid = null
     })
 
-    const pause = () => { if (this.video && !this.video.paused) this.pause() }
+    const pause = () => {
+      if (this.video && !this.video.paused) this.pause()
+    }
 
-    WIDGETS['functions-menu'].on('open', () => pause())
-    WIDGETS['learning-guide'].on('open', () => pause())
-    NNW.menu.search.on('open', () => pause())
+    if (WIDGETS['functions-menu']) {
+      WIDGETS['functions-menu'].on('open', () => pause())
+    }
+    
+    if (NNW && NNW.menu && NNW.menu.search) {
+      NNW.menu.search.on('open', () => pause())
+    }
 
-    opts = opts || {}
-    this.title = opts.title || 'HyperVideo Player'
-    this._createHTML(opts)
+    if (opts.video) {
+      this.src = opts.video
+    }
   }
 
   // .....
 
-  get volume () { return this.video.volume }
-  set volume (v) { this.video.volume = v }
+  get volume () {
+    return this.video.volume
+  }
+  set volume (v) {
+    this.video.volume = v
+  }
 
-  get src () { return this.video.src }
-  set src (v) { this.video.src = v }
+  get src () {
+    return this.video.src
+  }
+  set src (v) {
+    if (v.startsWith('data:')) {
+      this.video.src = v
+      if (this._opts && this._opts.mimeType) {
+        this.video.setAttribute('type', this._opts.mimeType)
+      }
+      this.video.load()
+    } else if (v.startsWith('blob:')) {
+      this.video.src = v
+      if (this._opts && this._opts.mimeType) {
+        this.video.setAttribute('type', this._opts.mimeType)
+      }
+      this.video.load()
+    } else {
+      const path = v.includes('/') ? '' : 'videos/'
+      if (this.video.canPlayType('video/mp4') !== '') {
+        this.video.setAttribute('src', `${path}${v}.mp4`)
+        this.video.setAttribute('type', 'video/mp4')
+      } else if (this.video.canPlayType('video/webm') !== '') {
+        this.video.setAttribute('src', `${path}${v}.webm`)
+        this.video.setAttribute('type', 'video/webm')
+      } else if (this.video.canPlayType('video/ogg') !== '') {
+        this.video.setAttribute('src', `${path}${v}.ogv`)
+        this.video.setAttribute('type', 'video/ogg')
+      } else {
+        console.error("HyperVideoPlayer: this browser can't play videos")
+      }
+    }
+  }
 
   actObj () {
     const md = WIDGETS['learning-guide'].metadata
@@ -106,7 +156,7 @@ class HyperVideoPlayer extends Widget {
               if (this._tempCode !== NNE.code) this._updateCode(this._tempCode)
               play(e)
             },
-            'yes, please download': (e) => {
+            'yes, please download': e => {
               e.hide()
               WIDGETS['functions-menu'].downloadCode()
               if (this._tempCode !== NNE.code) this._updateCode(this._tempCode)
@@ -260,6 +310,7 @@ class HyperVideoPlayer extends Widget {
   _createHTML (opts) {
     this.video = document.createElement('video')
     this.video.setAttribute('preload', 'auto')
+    // this.video.setAttribute('controls', 'true')
     this.video.style.display = 'block'
     this.video.style.width = '100%'
     this.video.addEventListener('loadeddata', () => {

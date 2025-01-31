@@ -19,6 +19,29 @@
         padding: 5px;
         margin: 5px 0;
       }
+
+      .recording-section {
+        margin: 20px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      .recording-section button {
+        margin: 5px;
+        padding: 8px 16px;
+        cursor: pointer;
+      }
+
+      .recording-section button:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      #recordingStatus {
+        margin-top: 10px;
+        font-style: italic;
+      }
     </style>
   </head>
   <body>
@@ -41,13 +64,20 @@
         type="file" 
         id="zipUpload" 
         accept=".zip"
-        onclick="console.log('ZIP input clicked')"
-        onchange="console.log('ZIP input changed')"
       >
     </div>
+
+    <div class="upload-section">
+      <p>Upload ZIP file with video:</p>
+      <input 
+        type="file" 
+        id="videoZipUpload" 
+        accept=".zip"
+      >
+    </div>
+
     <form 
       id="dataForm"
-      onsubmit="console.log('Form submit triggered');"
     >
       <label for="firstName">First Name:</label>
       <input type="text" id="firstName" required><br>
@@ -57,6 +87,14 @@
       <input type="text" id="title" required><br>
       <button type="submit">Submit</button>
     </form>
+
+    <div class="recording-section">
+      <h3>Screen Recording</h3>
+      <button id="startRecord" type="button">Start Recording</button>
+      <button id="stopRecord" type="button" disabled>Stop Recording</button>
+      <button id="saveRecord" type="button" disabled>Save Recording</button>
+      <div id="recordingStatus"></div>
+    </div>
 
     <script>
       function changeNetNet(data) {
@@ -119,10 +157,73 @@
         }
       }
 
-      async function downloadZip(data, filename = 'metadata.zip') {
+      async function handleVideoZipUpload(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const file = event.target.files[0];
+
+        if (file && file.name.endsWith('.zip')) {
+          try {
+            const zip = await JSZip.loadAsync(file);
+            
+            // Look for MP4 file in the zip
+            const videoFile = zip.file(/.*\.mp4$/i)[0]; // Get first MP4 file
+            
+            if (!videoFile) {
+              console.error('No MP4 file found in zip file');
+              return;
+            }
+
+            // Get video data as blob
+            const videoBlob = await videoFile.async('blob');
+            const blobUrl = URL.createObjectURL(videoBlob);
+
+            // Create test video element to verify the upload
+            const testVideo = document.createElement('video');
+            testVideo.src = blobUrl;
+            testVideo.controls = true;
+            
+            testVideo.onloadeddata = () => {
+              // Send the blob URL to parent window
+              window.opener.postMessage({
+                type: 'RECORDED_VIDEO',
+                data: {
+                  blobUrl: blobUrl,
+                  mimeType: 'video/mp4',
+                  timestamp: new Date().toISOString()
+                }
+              }, '*');
+              
+              document.getElementById('recordingStatus').textContent = 'Video uploaded successfully!';
+            };
+
+            testVideo.onerror = (e) => {
+              console.error('Video upload test failed:', e);
+              URL.revokeObjectURL(blobUrl);
+              document.getElementById('recordingStatus').textContent = 'Video upload failed: playback test error';
+            };
+
+          } catch (error) {
+            console.error('Error processing video zip file:', error);
+            document.getElementById('recordingStatus').textContent = 'Error processing video zip file';
+          }
+        } else {
+          console.error('Invalid file:', file ? `${file.name} is not a zip file` : 'No file selected');
+        }
+      }
+
+      async function downloadZip(data, recordedChunks = null, filename = 'tutorial.zip') {
         try {
           const zip = new JSZip()
           zip.file('metadata.json', JSON.stringify(data, null, 2))
+          
+          if (recordedChunks && recordedChunks.length > 0) {
+            const mp4Blob = new Blob(recordedChunks, { type: 'video/mp4' })
+            zip.file('recording.mp4', mp4Blob)
+            const webmBlob = new Blob(recordedChunks, { type: 'video/webm' })
+            zip.file('recording.webm', webmBlob)
+          }
 
           const content = await zip.generateAsync({ type: 'blob' })
           const link = document.createElement('a')
@@ -131,6 +232,7 @@
           document.body.appendChild(link)
           link.click()
           document.body.removeChild(link)
+          URL.revokeObjectURL(link.href)
         } catch (error) {
           console.error('Error creating zip:', error)
         }
@@ -149,7 +251,11 @@
           title
         };
 
-        downloadZip(data);
+        if (recordedChunks.length > 0) {
+          downloadZip(data, recordedChunks);
+        } else {
+          downloadZip(data);
+        }
       }
 
       function handleLayoutChange(event) {
@@ -159,12 +265,136 @@
 
       window.addEventListener('message', event => {
         const { type, data } = event.data
-        console.log('Received message:', { type, data });
         switch (type) {
           case 'SOME_MESSAGE_TYPE':
             break
         }
       })
+
+      let mediaRecorder;
+      let recordedChunks = [];
+
+      async function startRecording() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+          });
+
+          const videoPreview = document.createElement('video');
+          videoPreview.id = 'videoPreview';
+          videoPreview.autoplay = true;
+          videoPreview.muted = true;
+          videoPreview.style.width = '320px';
+          videoPreview.style.marginTop = '10px';
+          document.querySelector('.recording-section').appendChild(videoPreview);
+          videoPreview.srcObject = stream;
+
+          const supportedTypes = [
+            'video/webm;codecs=vp8,opus',
+            'video/webm;codecs=vp9,opus',
+            'video/webm',
+            'video/mp4'
+          ].filter(type => MediaRecorder.isTypeSupported(type));
+
+          if (supportedTypes.length === 0) {
+            throw new Error('No supported video recording MIME types found');
+          }
+
+          mediaRecorder = new MediaRecorder(stream, {
+            mimeType: supportedTypes[0],
+            videoBitsPerSecond: 2500000 // 2.5 Mbps
+          });
+          
+          recordedChunks = [];
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              recordedChunks.push(event.data);
+            }
+          };
+
+          mediaRecorder.start(100);
+
+          document.getElementById('startRecord').disabled = true;
+          document.getElementById('stopRecord').disabled = false;
+          document.getElementById('recordingStatus').textContent = 'Recording in progress...';
+
+        } catch (err) {
+          console.error("Error starting recording:", err);
+          document.getElementById('recordingStatus').textContent = 'Failed to start recording: ' + err.message;
+        }
+      }
+
+      function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+
+          mediaRecorder.onstop = async () => {
+            try {
+              const blob = new Blob(recordedChunks, {
+                type: 'video/mp4'
+              });
+
+              const blobUrl = URL.createObjectURL(blob);
+              const testVideo = document.createElement('video');
+              testVideo.src = blobUrl;
+              testVideo.controls = true;
+              
+              testVideo.onloadeddata = () => {                
+                document.getElementById('saveRecord').disabled = false;
+                
+                window.opener.postMessage({
+                  type: 'RECORDED_VIDEO',
+                  data: {
+                    blobUrl: blobUrl,
+                    mimeType: 'video/mp4',
+                    timestamp: new Date().toISOString()
+                  }
+                }, '*');
+              };
+
+              testVideo.onerror = (e) => {
+                console.error('Test playback failed:', e);
+                URL.revokeObjectURL(blobUrl);
+                document.getElementById('recordingStatus').textContent = 'Recording failed: playback test error';
+              };
+
+              mediaRecorder.stream.getTracks().forEach(track => track.stop());
+              
+              document.getElementById('startRecord').disabled = false;
+              document.getElementById('stopRecord').disabled = true;
+              document.getElementById('recordingStatus').textContent = 'Recording ready to save!';
+
+              const videoPreview = document.getElementById('videoPreview');
+              if (videoPreview) {
+                videoPreview.remove();
+              }
+            } catch (err) {
+              console.error('Error processing recording:', err);
+              document.getElementById('recordingStatus').textContent = 'Recording failed: ' + err.message;
+            }
+          };
+        }
+      }
+
+      function handleSaveRecording() {
+        if (recordedChunks.length > 0) {
+          const firstName = document.getElementById('firstName').value;
+          const lastName = document.getElementById('lastName').value;
+          const title = document.getElementById('title').value;
+
+          const data = {
+            firstName,
+            lastName,
+            title
+          };
+          
+          downloadZip(data, recordedChunks);
+          document.getElementById('saveRecord').disabled = true;
+          document.getElementById('recordingStatus').textContent = 'Recording saved in MP4 and WebM formats!';
+        }
+      }
 
       window.onload = function() {
         const zipUpload = document.getElementById('zipUpload');
@@ -173,6 +403,13 @@
         
         const layoutSelect = document.getElementById('layoutSelect');
         layoutSelect.addEventListener('change', handleLayoutChange);
+        
+        document.getElementById('startRecord').addEventListener('click', startRecording);
+        document.getElementById('stopRecord').addEventListener('click', stopRecording);
+        document.getElementById('saveRecord').addEventListener('click', handleSaveRecording);
+        
+        const videoZipUpload = document.getElementById('videoZipUpload');
+        videoZipUpload.addEventListener('change', handleVideoZipUpload);
       };
     </script>
   </body>

@@ -75,6 +75,7 @@ const w = new Widget({
   zIndex: 100,            // make sure it's always between 100 && 200
   width: 500,             //
   height: 500             //
+  hidden: false,          // If true, the widget is not visible on the screen but remains active in the background.
 })
 
 */

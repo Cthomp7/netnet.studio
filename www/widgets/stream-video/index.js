@@ -4,7 +4,7 @@ class StreamVideo extends Widget {
   constructor (opts) {
     super(opts)
     this.key = 'stream-video'
-    this.listed = false
+    this.listed = true
 
     this.rtcOpts = {
       audio: { echoCancellation: true },
