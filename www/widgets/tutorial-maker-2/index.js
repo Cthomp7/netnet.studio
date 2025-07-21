@@ -45,41 +45,45 @@ class TutorialMaker2 extends Widget {
       if (type === 'CHANGE_NETNET_LAYOUT') {
         NNW.layout = data.layout
       } else if (type === 'RECORDED_VIDEO') {
-        if (!WIDGETS.loaded.includes('hyper-video-player')) {
-          WIDGETS.load('hyper-video-player', () => {
-            const player = WIDGETS.create({
-              type: 'HyperVideoPlayer',
-              key: 'recorded-video-player',
-              video: data.blobUrl,
-              mimeType: data.mimeType
-            })
-            player.title = 'Recorded Video'
-            player.open()
+        WIDGETS.load('hyper-video-player', (HVP) => {
+          HVP.src = data.blobUrl 
+          HVP.open()
+        })
+        // if (!WIDGETS.loaded.includes('hyper-video-player')) {
+        //   WIDGETS.load('hyper-video-player', () => {
+        //     const player = WIDGETS.create({
+        //       type: 'HyperVideoPlayer',
+        //       key: 'recorded-video-player',
+        //       video: data.blobUrl,
+        //       mimeType: data.mimeType
+        //     })
+        //     player.title = 'Recorded Video'
+        //     player.open()
 
-            player.on('close', () => {
-              URL.revokeObjectURL(data.blobUrl)
-              const idx = WIDGETS.instantiated.indexOf('recorded-video-player')
-              if (idx > -1) WIDGETS.instantiated.splice(idx, 1)
-              delete WIDGETS['recorded-video-player']
-            })
-          })
-        } else {
-          const player = WIDGETS.create({
-            type: 'HyperVideoPlayer',
-            key: 'recorded-video-player',
-            video: data.blobUrl,
-            mimeType: data.mimeType
-          })
-          player.title = 'Recorded Video'
-          player.open()
+        //     player.on('close', () => {
+        //       URL.revokeObjectURL(data.blobUrl)
+        //       const idx = WIDGETS.instantiated.indexOf('recorded-video-player')
+        //       if (idx > -1) WIDGETS.instantiated.splice(idx, 1)
+        //       delete WIDGETS['recorded-video-player']
+        //     })
+        //   })
+        // } else {
+        //   const player = WIDGETS.create({
+        //     type: 'HyperVideoPlayer',
+        //     key: 'recorded-video-player',
+        //     video: data.blobUrl,
+        //     mimeType: data.mimeType
+        //   })
+        //   player.title = 'Recorded Video'
+        //   player.open()
 
-          player.on('close', () => {
-            URL.revokeObjectURL(data.blobUrl)
-            const idx = WIDGETS.instantiated.indexOf('recorded-video-player')
-            if (idx > -1) WIDGETS.instantiated.splice(idx, 1)
-            delete WIDGETS['recorded-video-player']
-          })
-        }
+        //   player.on('close', () => {
+        //     URL.revokeObjectURL(data.blobUrl)
+        //     const idx = WIDGETS.instantiated.indexOf('recorded-video-player')
+        //     if (idx > -1) WIDGETS.instantiated.splice(idx, 1)
+        //     delete WIDGETS['recorded-video-player']
+        //   })
+        // }
       }
     })
   }

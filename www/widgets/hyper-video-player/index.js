@@ -4,8 +4,8 @@ class HyperVideoPlayer extends Widget {
     opts = opts || {}
     super(opts)
     this._opts = opts
-    this.key = opts.key || 'hyper-video-player'
-    this.title = opts.title || 'HyperVideo Player'
+    this.key = 'hyper-video-player'
+    this.title = 'HyperVideo Player'
     this.listed = true
     this.duration = null
 
@@ -22,7 +22,7 @@ class HyperVideoPlayer extends Widget {
     this.on('close', () => {
       if (!this.video.paused) this.pause()
 
-      if (WIDGETS['learning-guide'] && WIDGETS['learning-guide'].metadata) {
+      // if (WIDGETS['learning-guide'] && WIDGETS['learning-guide'].metadata) {
         const tg = WIDGETS['learning-guide']
         const tm = WIDGETS['tutorial-maker']
         if (tm && tm.opened) tm.close()
@@ -35,7 +35,7 @@ class HyperVideoPlayer extends Widget {
         if (window.convo && window.convo.id === 'introducing-tutorial') {
           window.convo.hide()
         }
-      }
+      // }
       this.sid = null
     })
 
@@ -43,17 +43,17 @@ class HyperVideoPlayer extends Widget {
       if (this.video && !this.video.paused) this.pause()
     }
 
-    if (WIDGETS['functions-menu']) {
+    // if (WIDGETS['functions-menu']) {
       WIDGETS['functions-menu'].on('open', () => pause())
-    }
+    // }
     
-    if (NNW && NNW.menu && NNW.menu.search) {
+    // if (NNW && NNW.menu && NNW.menu.search) {
       NNW.menu.search.on('open', () => pause())
-    }
+    // }
 
-    if (opts.video) {
-      this.src = opts.video
-    }
+    // if (opts.video) {
+    //   this.src = opts.video
+    // }
   }
 
   // .....
