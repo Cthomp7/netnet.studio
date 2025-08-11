@@ -5,8 +5,13 @@ class TutorialMaker2 extends Widget {
     this.key = 'tutorial-maker-2'
     this.title = 'Tutorial Maker 2'
     this._innerHTML = '<div></div>'
+    this.hidden = true
+    Convo.load(this.key, () => { 
+      this.convos = window.CONVOS[this.key](this)
+      this._startConvo() 
+    })
 
-    this._createHTML()
+    this._loadPopout()
     this.addMessageListener()
   }
 
@@ -39,22 +44,8 @@ class TutorialMaker2 extends Widget {
     )
   }
 
-  _createHTML () {
-    this.innerHTML = `
-      <div class="tut-mkr-com">
-        <p class="tut-mkr-com-msg">
-        Welcome to the <span>Tutorial Maker</span>! Here you can make interactive tutorials using all sorts of useful tools. Click open to get started!
-        </p>
-        <br/>
-        <div class="tut-mkr-com-btns">
-          <button class="pill-btn pill-btn--secondary open-btn">open</button>
-          <button class="pill-btn pill-btn--secondary close-btn">close</button>
-        </div>
-      </div>
-    `
-
-    this.$('.open-btn').addEventListener('click', () => this._loadPopout())
-    this.$('.close-btn').addEventListener('click', () => this.close())
+  _startConvo () {
+    window.convo = new Convo(this.convos, 'opened')
   }
 
   addMessageListener () {
