@@ -6,16 +6,31 @@ class TutorialMaker2 extends Widget {
     this.title = 'Tutorial Maker 2'
     this._innerHTML = '<div></div>'
     this.hidden = true
+    
     Convo.load(this.key, () => { 
       this.convos = window.CONVOS[this.key](this)
       this._startConvo() 
     })
 
-    this._loadPopout()
-    this.addMessageListener()
+    this._onLoad()
+
+    nn.on('message', e => {
+      const { type, payload } = e.data
+      if (e.origin !== window.location.origin) return // for security
+      console.log("message type: ", type)
+      if (type === 'tut-mrk-update-hvp') {
+        this._updateHVP(payload)
+      }
+    })
   }
 
-  async _loadPopout () {
+  _onLoad () {
+    this._loadPopout()
+    this.addMessageListener()
+    this._loadHVP()
+  }
+
+  _loadPopout () {
     this.hidden = true
     this.popout = window.open(
       './widgets/tutorial-maker-2/popout/index.html',
@@ -27,6 +42,43 @@ class TutorialMaker2 extends Widget {
       this.popoutReady = true
       // this.sendToPopout('SOME_MESSAGE_TYPE', { foo: 'bar' })
     })
+  }
+
+  _messagePopup (type, payload) {
+    if (!this.popup) return
+    this.popup.postMessage({ type, payload }, window.origin)
+  }
+
+  _startConvo () {
+    window.convo = new Convo(this.convos, 'opened')
+  }
+
+  _loadHVP () {
+    WIDGETS.open('hyper-video-player', () => {
+      this.video = WIDGETS['hyper-video-player'].video
+      this.video.addEventListener('timeupdate', () => {
+        const ct = this.video.currentTime
+        this._messagePopup('tut-mkr-time-update', { currentTime: ct })
+      })
+    })
+    const time = utils.getVal('--menu-fades-time')
+    this.update({ top: 20, left: 20 }, time)
+  }
+
+  _updateHVP (metadata) {
+    console.log("metadata: ", metadata)
+    const { id, title, videofile } = metadata
+    const hvp = WIDGETS['hyper-video-player']
+    hvp.title = title
+    hvp.video.addEventListener('loadedmetadata', () => {
+      this.duration = Number(hvp.video.duration)
+      this._messagePopup('tut-mkr-update-duration', { duration: Number(hvp.video.duration) })
+    })
+    if (videofile && videofile !== '') {
+      hvp.updateVideo(videofile, id)
+    } else {
+      hvp.updateVideo('screen-saver')
+    }
   }
 
   sendToPopout (type, data) {
@@ -42,10 +94,6 @@ class TutorialMaker2 extends Widget {
       },
       '*'
     )
-  }
-
-  _startConvo () {
-    window.convo = new Convo(this.convos, 'opened')
   }
 
   addMessageListener () {

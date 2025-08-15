@@ -3,49 +3,15 @@
   <head>
     <title>Tutorial Maker 2</title>
     <script src="/core/libs/jszip.min.js"></script>
-    <style>
-      .upload-section {
-        margin-bottom: 20px;
-        padding: 10px;
-        border: 1px dashed #ccc;
-      }
-      
-      .layout-section {
-        margin-bottom: 20px;
-        padding: 10px;
-      }
-      
-      select {
-        padding: 5px;
-        margin: 5px 0;
-      }
-
-      .recording-section {
-        margin: 20px 0;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
-
-      .recording-section button {
-        margin: 5px;
-        padding: 8px 16px;
-        cursor: pointer;
-      }
-
-      .recording-section button:disabled {
-        cursor: not-allowed;
-        opacity: 0.6;
-      }
-
-      #recordingStatus {
-        margin-top: 10px;
-        font-style: italic;
-      }
-    </style>
+    <link rel="stylesheet" href="/core/netitor/src/css/main.css">
+    <link rel="stylesheet" href="/core/styles/base.css">
+    <link rel="stylesheet" href="/core/styles/fonts.css">
+    <link rel="stylesheet" href="/core/styles/buttons.css">
+    <link rel="stylesheet" href="/core/styles/form-fields.css">
+    <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
-    <h1>Tutorial Maker 2</h1>
+    <!-- <h1>Tutorial Maker 2</h1>
     
     <div class="layout-section">
       <label for="layoutSelect">Layout:</label>
@@ -410,7 +376,11 @@
         
         const videoZipUpload = document.getElementById('videoZipUpload');
         videoZipUpload.addEventListener('change', handleVideoZipUpload);
-      };
+      }; -->
     </script>
+    <script src="/nn.min.js"></script>
+    <script src="/netitor.min.js"></script>
+    <script src="/core/utils.js"></script>
+    <script src="./main.js"></script>
   </body>
 </html>
