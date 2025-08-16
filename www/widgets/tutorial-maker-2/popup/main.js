@@ -1,4 +1,3 @@
-/* global Widget, WIDGETS, utils, NNE, NNW, nn */
 let metadata = {
   id: '', // folder name (lowercase, no spaces)
   title: '',
@@ -11,10 +10,48 @@ let metadata = {
   checkpoints: {}, // TODO
   references: [] // TODO
 }
-let metadataHTML, toolsHTML, innerHTML
 
-const MSG = (type, payload) => {
+let metadataHTML
+let toolsHTML
+let innerHTML
+let uploader
+let video = {
+  currentTime: null,
+  duration: null
+}
+let keyframes = {}
+let widgets = {}
+let timecodes = []
+let sid = null
+
+tempHighlight = null
+tempSpotlight = null
+
+// post a message to the browser
+const postMSG = (type, payload) => {
   window.opener.postMessage({ type, payload }, window.origin)
+}
+
+// post a message to the browser that has a response
+const getMSG = (type, payload) => {
+  return new Promise((resolve, reject) => {
+    const handler = (event) => {
+      if (event.origin !== window.origin) return
+      // check that this is the response to our request
+      if (event.data?.replyTo === type) {
+        window.removeEventListener('message', handler)
+        resolve(event.data.payload)
+      }
+    }
+    window.addEventListener('message', handler)
+
+    window.opener.postMessage({ type, payload }, window.origin)
+
+    setTimeout(() => {
+      window.removeEventListener('message', handler);
+      reject(new Error('Timed out waiting for response'))
+    }, 5000);
+  })
 }
 
 function upload () {
@@ -40,31 +77,34 @@ function download (type) {
   document.body.removeChild(a)
 }
 
-function createKeyframe () {
+async function createKeyframe () {
+  const kfData = await getMSG('tut-mkr-kf-data')
+  const { code, layout, netnet, scroll, widgets } = kfData
   const idx = video.currentTime
+  const scrollTo = { x: scroll.left, y: scroll.top }
   keyframes[idx] = {
-    video: getWigDetails(WIDGETS['hyper-video-player']),
-    widgets: getCurrentWidgets(),
-    code: NNE.code,
+    video: {...video, ...kfData.video},
+    widgets,
+    code,
     highlight: tempHighlight,
     spotlight: tempSpotlight,
-    layout: NNW.layout,
-    netnet: getNetNetPos(),
-    scrollTo: getScrollPos(),
+    layout,
+    netnet,
+    scrollTo,
     keylog: getKeylog()
   }
   if (keyframes[idx].keylog) {
     metadata.keylogs = true
     keyframes[idx].code = null
   }
-  WIDGETS['hyper-video-player'].loadKeyframes(keyframes)
+  postMSG('tut-mkr-update-hvp', { action: ['load-keyframes'], keyframes })
   updateView()
 }
 
 function removeKeyframe () {
   const idx = video.currentTime
   delete keyframes[idx]
-  WIDGETS['hyper-video-player'].loadKeyframes(keyframes)
+  postMSG('tut-mkr-update-hvp', { action: ['load-keyframes'], keyframes })
   updateView(true)
 }
 
@@ -163,11 +203,11 @@ function createTutorialToolsHTML () {
   keyframe.children[3].addEventListener('click', () => goTo('keyframe', 1))
 
   ele.querySelector('button[name="edit-widgets"]')
-    .addEventListener('click', () => WIDGETS.open('widget-maker'))
+    .addEventListener('click', () => postMSG('tut-mkr-open-wdgt-mkr'))
 
   ele.querySelector('button[name="n-highlight"]')
     .addEventListener('click', () => {
-      NNE.highlight(null)
+      postMSG('tut-mkr-highlight', {})
       tempHighlight = null
       const obj = {}
       const ins = ele.querySelectorAll('.tut-maker-row.hl > input')
@@ -181,7 +221,8 @@ function createTutorialToolsHTML () {
       if (clr.value !== '') obj.color = clr.value
       if (obj.startLine) {
         tempHighlight = obj
-        NNE.highlight(obj)
+        postMSG('tut-mkr-highlight', obj)
+        console.log("obj: ", obj)
       }
     })
   ele.querySelector('[name="clear-highlight"]')
@@ -189,24 +230,24 @@ function createTutorialToolsHTML () {
       const ins = ele.querySelectorAll('.tut-maker-row.hl > input')
       ins.forEach((inp, i) => { inp.value = '' })
       ele.querySelector('input[title="highlight color"]').value = ''
-      NNE.highlight(null)
+      postMSG('tut-mkr-highlight', {})
       tempHighlight = null
     })
 
   ele.querySelector('button[name="n-spotlight"]')
     .addEventListener('click', () => {
-      NNE.spotlight(null)
+      postMSG('tut-mkr-spotlight', {})
       tempSpotlight = null
       const q = 'input[placeholder="line numbers (comma separated)"]'
       const v = ele.querySelector(q).value.split(',').map((v) => Number(v))
       if (!isNaN(v[0]) && v[0] !== 0) {
         tempSpotlight = v
-        NNE.spotlight(v)
+        postMSG('tut-mkr-spotlight', v)
       }
     })
   ele.querySelector('[name="clear-spotlight"]')
     .addEventListener('click', () => {
-      NNE.spotlight(null)
+      postMSG('tut-mkr-spotlight', {})
       tempSpotlight = null
       const q = 'input[placeholder="line numbers (comma separated)"]'
       ele.querySelector(q).value = ''
@@ -243,9 +284,7 @@ function createFileReader () {
         const b64 = e.target.result.split('base64,')[1]
         const data = JSON.parse(utils.atob(b64))
         loadKeylog(data)
-        const nt = WIDGETS['netitor-logger']
-        if (nt) WIDGETS['netitor-logger'].loadData(data)
-        else WIDGETS.load('netitor-logger', (w) => w.loadData(data))
+        postMSG('tut-mkr-load-data-lggr', { data })
       } else {
         console.error('TutorialMaker: seems you tried to open the wrong file')
       }
@@ -255,10 +294,15 @@ function createFileReader () {
 }
 
 function createHTML () {
-  // createFileReader()
+  createFileReader()
   metadataHTML = createMetadataHTML()
   toolsHTML = createTutorialToolsHTML()
-  nn.get('body').appendChild(metadataHTML)
+}
+
+function updateHTML (html) {
+  // remove previous html and update
+  nn.get('body').innerHTML = ''
+  nn.get('body').appendChild(html)
 }
 
 // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
@@ -268,15 +312,11 @@ function loadData (data) {
   keyframes = data.keyframes
   widgets = data.widgets
   // NNE.addCustomRoot(`tutorials/${metadata.id}/`)
-  WIDGETS['hyper-video-player'].loadKeyframes(keyframes)
+  postMSG('tut-mkr-update-hvp', { action: ['load-keyframes'], keyframes })
   if (metadata.duration) {
-    WIDGETS['hyper-video-player'].duration = Number(metadata.duration)
+    postMSG('tut-mkr-update-hvp', { action: ['duration'], duration: Number(metadata.duration) })
   }
-  for (const key in widgets) {
-    if (!WIDGETS.instantiated.includes(key)) {
-      WIDGETS.create(widgets[key])
-    }
-  }
+  postMSG('tut-mkr-create-wdgt', { widgets })
   if (metadata.jsfile) {
     const file = `tutorials/${metadata.id}/${metadata.jsfile}`
     utils.loadFile(file, () => window.TUTORIAL.init())
@@ -285,7 +325,7 @@ function loadData (data) {
 }
 
 function loadKeylog (data) {
-  const sel = $('[title="keylog recordings"]')
+  const sel = $('[title="keylog recordings"]')[0]
   sel.innerHTML = '<option value="NONE">NONE</option>'
   Object.keys(data).forEach(key => {
     const opt = document.createElement('option')
@@ -297,7 +337,7 @@ function loadKeylog (data) {
 
 function loadMetadata (data) {
   metadata = data
-  NNE.addCustomRoot(`tutorials/${data.id}/`)
+  postMSG('tut-mkr-add-root', { root: `tutorials/${data.id}/` })
   metadataHTML.querySelectorAll('input').forEach(e => {
     const name = (e.name.includes('author')) ? e.name.split('-') : [e.name]
     if (e.name === 'keywords') e.value = metadata.keywords.join(', ')
@@ -316,17 +356,17 @@ function updateMetadata () { // when "enter" pressed
 
   // update HVP
   const { id, title, videofile } = metadata
-  MSG('tut-mrk-update-hvp', { id, title, videofile })
+  postMSG('tut-mkr-update-hvp-video', { id, title, videofile })
   
-  innerHTML = toolsHTML
+  updateHTML(toolsHTML)
 }
 
 // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
 // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.••.¸¸¸.•*• keyframe methods
 
-function timeUpdate () {
-  const ct = video.currentTime
-  $('input[name="seconds"]').value = Math.round(ct * 100) / 100
+function timeUpdate (ct) {
+  video.currentTime = ct
+  $('input[name="seconds"]')[0].value = Math.round(ct * 100) / 100
   updateView()
 }
 
@@ -334,44 +374,44 @@ function updateView (skipRender) {
   const kf = keyframes[video.currentTime]
 
   // update keframe UI
-  const kfUI = $('input[name="keyframes"]')
+  const kfUI = $('input[name="keyframes"]')[0]
   if (kf) {
     kfUI.style.backgroundColor = 'var(--netizen-tag)'
     const ts = video.currentTime.toString()
     kfUI.value = Object.keys(keyframes).sort((a, b) => a - b).indexOf(ts)
-    $('button[name="edit-keyframe"]').textContent = 'remove keyframe'
+    $('button[name="edit-keyframe"]')[0].textContent = 'remove keyframe'
   } else if (kfUI.style.backgroundColor !== 'var(--netizen-meta)') {
     kfUI.style.backgroundColor = 'var(--netizen-meta)'
     kfUI.value = ''
-    $('button[name="edit-keyframe"]').textContent = 'create keyframe'
+    $('button[name="edit-keyframe"]')[0].textContent = 'create keyframe'
   }
 
   // update highlight UI
-  const hlUI = $('[title="start line number"]')
+  const hlUI = $('[title="start line number"]')[0]
   if (kf && kf.highlight) {
     const h = kf.highlight
-    const ins = $('.tut-maker-row.hl > input')
+    const ins = $('.tut-maker-row.hl > input')[0]
     const props = ['startLine', 'startCol', 'endLine', 'endCol']
     ins.forEach((inp, i) => {
       if (h[props[i]]) inp.value = h[props[i]]
       else inp.value = ''
     })
-    if (h.color) $('[title="highlight color"]').value = h.color
-    else $('[title="highlight color"]').value = ''
+    if (h.color) $('[title="highlight color"]')[0].value = h.color
+    else $('[title="highlight color"]')[0].value = ''
   } else if (hlUI.value !== '') {
-    $('[name="clear-highlight"]').click()
+    $('[name="clear-highlight"]')[0].click()
   }
 
   // update spotlight UI
-  const slUI = $('[placeholder="line numbers (comma separated)"]')
+  const slUI = $('[placeholder="line numbers (comma separated)"]')[0]
   if (kf && kf.spotlight) {
     slUI.value = kf.spotlight.join(',')
   } else if (slUI.value !== '') {
-    $('[name="clear-spotlight"]').click()
+    $('[name="clear-spotlight"]')[0].click()
   }
 
   // update keylog selection
-  const klUI = $('[title="keylog recordings"]')
+  const klUI = $('[title="keylog recordings"]')[0]
   if (kf && kf.keylog) {
     klUI.value = kf.keylog
   } else if (klUI.value !== 'NONE') {
@@ -379,7 +419,7 @@ function updateView (skipRender) {
   }
 
   // update studio
-  if (!skipRender) WIDGETS['hyper-video-player'].renderKeyframe()
+  if (!skipRender) postMSG('tut-mkr-update-hvp', { action: ['render-keyframe'] })
 }
 
 // .............. jumping around via Tutorial Maker GUI
@@ -403,24 +443,22 @@ function goTo (type, d) {
 }
 
 function goToTime (v) {
-  WIDGETS['hyper-video-player'].pause()
+  postMSG('tut-mkr-update-hvp', { action: ['pause'] })
   if (v < video.duration && v >= 0) video.currentTime = v
   else if (v < 0) video.currentTime = 0
   else video.currentTime = video.duration - 0.01
-  $('input[name="seconds"]').value = video.currentTime
-  WIDGETS['hyper-video-player'].updatePauseClock()
-  WIDGETS['hyper-video-player'].resetKeyframeStatus()
+  $('input[name="seconds"]')[0].value = video.currentTime
+  postMSG('tut-mkr-update-hvp', { action: ['update-pause-clock', 'reset-keyframes-status'] })
   updateView()
 }
 
 function goToKeyframe (frame) {
   if (!frame) return
   if (frame.index === -1) return window.alert('no keyframes yet')
-  WIDGETS['hyper-video-player'].pause()
-  $('input[name="keyframes"]').value = frame.index
+  postMSG('tut-mkr-update-hvp', { action: ['pause'] })
+  $('input[name="keyframes"]')[0].value = frame.index
   video.currentTime = frame.time
-  WIDGETS['hyper-video-player'].updatePauseClock()
-  WIDGETS['hyper-video-player'].resetKeyframeStatus()
+  postMSG('tut-mkr-update-hvp', { action: ['update-pause-clock', 'reset-keyframes-status'] })
   updateView()
 }
 
@@ -454,55 +492,42 @@ function findKeyframe (dir) {
   return { time: found, index: idx }
 }
 
+function unserializeVideo(desc) {
+  if (!desc || desc.__dom__ !== 'VIDEO') return null;
+
+  // try to find an existing <video> element by ID
+  let video = desc.id ? document.getElementById(desc.id) : null;
+
+  // if none exists, create one
+  if (!video) {
+    video = document.createElement('video');
+    if (desc.id) video.id = desc.id;
+    if (desc.src) video.src = desc.src;
+    document.body.appendChild(video);
+  }
+
+  // restore state if provided
+  if (typeof desc.currentTime === 'number') {
+    video.currentTime = desc.currentTime;
+  }
+  if (typeof desc.muted === 'boolean') {
+    video.muted = desc.muted;
+  }
+  if (typeof desc.paused === 'boolean' && desc.paused === false) {
+    video.play().catch(() => {
+      /* handle autoplay restrictions */
+    });
+  }
+
+  return video;
+}
+
 // ................. generate data for keyframe object
 
 function getKeylog () {
-  const kl = $('[title="keylog recordings"]').value
+  const kl = $('[title="keylog recordings"]')[0].value
   if (kl !== 'NONE') return kl
   else return null
-}
-
-function getNetNetPos () {
-  if (['welcome', 'separate-window'].includes(NNW.layout)) {
-    return getSizeAndPosition(NNW)
-  } else return {}
-}
-
-function getScrollPos () {
-  const s = NNE.cm.getScrollInfo()
-  return { x: s.left, y: s.top }
-}
-
-function getWigDetails (w) {
-  return getSizeAndPosition(w)
-}
-
-function getCurrentWidgets () {
-  const ignore = [
-    'tutorial-maker', 'widget-maker', 'hyper-video-player', 'netitor-logger'
-  ]
-  return WIDGETS.list()
-    .filter(w => w.opened)
-    .filter(w => !ignore.includes(w.key))
-    .map(w => getWigDetails(w))
-}
-
-function getSizeAndPosition (w) {
-  const data = (w !== NNW)
-    ? { key: w.key, width: w.width, height: w.height } : {}
-
-  if (w.left < w.right) data.left = w.left
-  else data.right = w.right
-
-  if (w.top < w.bottom) data.top = w.top
-  else data.bottom = w.bottom
-
-  if (w !== NNW) data.zIndex = w.zIndex
-  if (w === NNW && NNW.layout === 'separate-window') {
-    data.width = NNW.width
-    data.height = NNW.height
-  }
-  return data
 }
 
 // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
@@ -512,14 +537,16 @@ nn.on('message', (e) => {
   if (e.origin !== window.location.origin) return
   const { type, payload } = e.data
   if (type === 'tut-mkr-update-duration') {
-    console.log("payload: ", payload)
-    metadata.duration = payload
+    metadata.duration = payload.duration
   } else if (type === 'tut-mkr-time-update') {
     timeUpdate(payload.currentTime)
+  } else if (type === 'tut-mkr-update-video') {
+    video = payload
   }
 })
 
 nn.on('load', () => {
-  MSG('tut-mkr-opened')
+  postMSG('tut-mkr-opened')
   createHTML()
+  updateHTML(metadataHTML)
 })
