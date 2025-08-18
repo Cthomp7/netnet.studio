@@ -39,6 +39,312 @@ body {
 
 /*  new css */
 
+.tut-maker-tool-sect {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  align-items: center;
+  overflow-y: scroll;
+  height: 100vh;
+}
+.tut-maker-tool-sect::-webkit-scrollbar-track {
+  background: var(--netizen-background);      /* track color */
+}
+.tut-maker-tool-sect::-webkit-scrollbar-thumb {
+  background-color: var(--netizen-tag);   /* thumb color */
+}
+.tut-maker-tool-sect::-webkit-scrollbar-thumb:hover {
+  background-color: var(--netizen-text);   /* hover color */
+}
+.tut-maker-tool-sect {
+  /* Firefox */
+  scrollbar-width: auto;
+  scrollbar-color: var(--netizen-tag) var(--netizen-background);
+}
+
+.tut-maker-kf {
+  background: var(--netizen-meta);
+  padding: 16px;
+  border-radius: 18px;
+  max-width: 550px;
+  width: 100%;
+}
+.tut-maker-kf-header {
+  display: flex;
+  justify-content: space-between;
+}
+.tut-maker-kf-header-left {
+  height: fit-content;
+}
+.tut-maker-kf-header-right {
+  display: flex; 
+  gap: 8px; 
+  max-height: 32px;
+}
+.tut-maker-button {
+  border-radius: 25px;
+  border: 2px solid #313174;
+  color: var(--netizen-meta);
+  background-color: var(--netizen-background);
+  padding: 6px 15px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 1.125rem;
+  font-weight: 500;
+  transition: background-color var(--element-transition-time) var(--sarah-ease), color var(--element-transition-time) var(--sarah-ease);
+}
+.tut-maker-button:hover {
+  color: var(--netizen-background);
+  background-color: var(--netizen-text);
+}
+.tut-maker-kf-header .tut-maker-button:hover {
+  color: var(--netizen-meta);
+  background-color: var(--netizen-comment);
+}
+.tut-maker-kf-title {
+  font-size: 1.375rem;
+  font-weight: bold;
+  color: var(--netizen-background);
+  margin: 4px 0 6px 0;
+}
+.tut-maker-kf-tsp {
+  color: var(--netizen-background);
+  margin: 0;
+  line-height: 1.25rem;
+  font-size: 1.125rem;
+  font-weight: normal;
+}
+
+.tut-maker-time-steppers {
+  display: flex;
+  justify-content: space-between;
+}
+.tut-maker-stepper{
+  display: flex;
+  gap: 5px;
+  max-height: 34px;
+}
+.tut-maker-stepper-cont > p {
+  color: var(--netizen-comment);
+  font-size: 1.125rem;
+  margin: 0;
+  margin-bottom: 6px;
+}
+.tut-maker-stepper-count {
+  background-color: var(--netizen-background);
+  color: var(--netizen-meta);
+  min-width: 61px;
+  border-radius: 7px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+.tut-maker-stepper-count p {
+  margin: 0;
+  padding-top: 3px;
+}
+.tut-maker-stepper-count.light {
+  background-color: var(--netizen-meta);
+  color: var(--netizen-background);
+  box-shadow: inset 0px 1px 5.7px 0 var(--netizen-comment);
+}
+.tut-maker-stepper-count.light p {
+  font-weight: 600;
+}
+.tut-maker-arrow {
+  background: var(--netizen-comment);
+  border: solid 2px #313174;
+  box-shadow: 0 1 7.1 #23223D;
+  border-radius: 7px;
+  aspect-ratio: 1 / 1;
+  width: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.tut-maker-arrow-l {
+  background: var(--netizen-meta);
+  border: solid 2px #515199;
+  box-shadow: 0 1 7.1 #23223D;
+  border-radius: 7px;
+  aspect-ratio: 1 / 1;
+  width: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.tut-maker-edit-menu {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.tut-maker-edit-menu hr {
+  border: 1px solid var(--netizen-comment);
+  height: 2px;
+  width: 100%;
+  margin-bottom: 0;
+}
+.tut-maker-edit-dd {
+  width: 100%;
+  background: var(--netizen-background);
+  border-radius: 9px;
+  padding: 13px;
+  cursor: pointer;
+}
+.tut-maker-edit-dd-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tut-maker-edit-dd-title > div {
+  display: flex;
+  gap: 10px;
+}
+.tut-maker-edit-dd-p {
+  color: var(--netizen-meta);
+  font-size: 1.188rem;
+  margin: auto 0;
+}
+.tut-maker-hghlght-clr {
+  width: 23px;
+  height: 23px;
+  border: 2px solid #9999BE;
+  border-radius: 7px;
+  background-color: #E9FF3F;
+}
+.tut-maker-edit-kl-cont {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.tut-maker-edit-kl-cont > p {
+  margin: 0;
+  font-size: 1.188rem;
+  font-weight: 700;
+  color: var(--netizen-background);
+}
+.tut-maker-edit-kl-cont .tut-maker-edit-dd {
+  max-width: 361px;
+}
+.tut-maker-edit-kl-cont .tut-maker-edit-dd-title p {
+  color: #9999BE;
+  margin: 0;
+}
+.tut-maker-delete-cont {
+  display: flex;
+  justify-content: space-between;
+}
+.tut-maker-delete-cont .tut-maker-button {
+  width: fit-content; 
+  padding: 2px 15px;
+  transition: background-color var(--element-transition-time) var(--sarah-ease), color var(--element-transition-time) var(--sarah-ease);
+}
+.tut-maker-delete-cont .tut-maker-button:hover,
+.tut-maker-hghlght-bottom .tut-maker-button:first-of-type:hover,
+.tut-maker-sptlght-bottom-btns .tut-maker-button:first-of-type:hover {
+  border-color: rgb(252, 97, 86);
+  background-color: rgb(252, 97, 86);
+  color: var(--netizen-background);
+}
+
+.tut-maker-hghlght-edit-menu,
+.tut-maker-sptlght-edit-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.tut-maker-hghlght-steppers,
+.tut-maker-sptlght-cont,
+.tut-maker-sptlght-bottom {
+  display: flex;
+  justify-content: space-between;
+}
+.tut-maker-hghlght-steppers > div,
+.tut-maker-sptlght-cont > div,
+.tut-maker-sptlght-bottom > div {
+  display: flex;
+  gap: 15px;
+}
+.tut-maker-stepper-count.start::before {
+  content: "start";
+  position: absolute;
+  top: -22px;
+  color: var(--netizen-meta);
+  font-size: 0.75rem;
+}
+.tut-maker-stepper-count.end::before {
+  content: "end";
+  position: absolute;
+  top: -22px;
+  color: var(--netizen-meta);
+  font-size: 0.75rem;
+}
+.tut-maker-vrtl-line {
+  background: var(--netizen-comment);
+  width: 3px;
+  height: 100%;
+  border-radius: 15px;
+  flex-shrink: 0;
+}
+.tut-maker-hghlght-bottom {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+.tut-maker-hghlght-bottom .tut-maker-button,
+.tut-maker-sptlght-bottom .tut-maker-button,
+.tut-maker-sptlght-cont .tut-maker-button {
+  width: fit-content;
+  padding: 4px 15px;
+  flex-shrink: 0;
+}
+.tut-maker-hghlght-clr-large {
+  width: 38px;
+  height: 38px;
+  border: 2px solid #9999BE;
+  border-radius: 7px;
+  background-color: #E9FF3F;
+  flex-shrink: 0;
+}
+.tut-maker-hghlght-bottom .tut-maker-vrtl-line {
+  height: 38px;
+}
+.tut-maker-input-l {
+  background: var(--netizen-meta);
+  border: 2px solid #9999BE;
+  border-radius: 7px;
+  font-size: 1.188rem;
+  margin: auto 0;
+  padding: 4px 10px;
+  width: 100%;
+  min-width: 247px;
+}
+
+@media (max-width: 498px) {
+  .tut-maker-kf-header {
+    align-items: center;
+  }
+  .tut-maker-kf-header-right {
+    flex-direction: column-reverse;
+    max-height: 100%;
+  }
+  .tut-maker-time-steppers {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .tut-maker-stepper-cont {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
 
 .upload-section {
   margin-bottom: 20px;

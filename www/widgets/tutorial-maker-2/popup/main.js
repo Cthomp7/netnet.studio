@@ -12,7 +12,7 @@ let metadata = {
 }
 
 let metadataHTML
-let toolsHTML
+let toolsHTML = ''
 let innerHTML
 let uploader
 let video = {
@@ -138,69 +138,32 @@ function createMetadataHTML () {
   return ele
 }
 
-function createTutorialToolsHTML () {
+async function createTutorialToolsHTML () {
   const ele = document.createElement('section')
-  ele.style.display = 'flex'
-  ele.style.flexDirection = 'column'
-  ele.innerHTML = `
-    <button class="pill-btn pill-btn--secondary tut-maker-btn" name="netitor-logger">load keylogs.json</button>
-    <button class="pill-btn pill-btn--secondary tut-maker-btn" name="load-data">load data.json</button><br>
-    <hr style="width: 100%">
-    <div class="tut-maker-row" name="t">
-      <div class="tut-maker-label">seconds :&nbsp;</div>
-      <span>❮❮</span>
-      <input class="input input--lg" type="text" name="seconds" value="0">
-      <span>❯❯</span>
-    </div>
-    <div class="tut-maker-row" name="kf">
-      <div class="tut-maker-label" style="margin-top: 0px;">keyframe:&nbsp;</div>
-      <span>❮❮</span>
-      <input class="input input--lg" type="text" name="keyframes">
-      <span>❯❯</span>
-    </div>
-    <button class="pill-btn pill-btn--secondary tut-maker-btn" name="edit-keyframe">create keyframe</button>
-    <hr style="width: 100%">
-    <button class="pill-btn pill-btn--secondary tut-maker-btn" name="edit-widgets">add/edit widget</button>
-    <br>
-    <div class="tut-maker-row hl" style="margin-top: 10px !important;">
-      <input class="input input--lg" type="text" class="ti" placeholder="sl" title="start line number">
-      <input class="input input--lg" type="text" class="ti" placeholder="sc" title="start column number">
-      <input class="input input--lg" type="text" class="ti" placeholder="el" title="end line number">
-      <input class="input input--lg" type="text" class="ti" placeholder="ec" title="end column number">
-    </div>
-    <input class="input input--lg" type="text" style="width: 172px;" placeholder="color" title="highlight color">
-    <div class="tut-maker-row hl">
-      <button class="pill-btn pill-btn--secondary tut-maker-btn" name="n-highlight">highlight code</button>
-      <button class="pill-btn pill-btn--secondary tut-maker-btn" name="clear-highlight">clear</button>
-    </div>
-    <input class="input input--lg" type="text" placeholder="line numbers (comma separated)" style="width: 172px;">
-    <div class="tut-maker-row">
-      <button class="pill-btn pill-btn--secondary tut-maker-btn" name="n-spotlight">spotlight code</button>
-      <button class="pill-btn pill-btn--secondary tut-maker-btn" name="clear-spotlight">clear</button>
-    </div>
-    <div class="tut-maker-label">keylog recordings</div>
-    <select class="dropdown dropdown--invert" style="margin-top: 10px !important;" title="keylog recordings"></select>
-    <hr style="width: 100%">
-    <button class="pill-btn pill-btn--secondary tut-maker-btn" name="download-data">DOWNLOAD DATA</button>`
+  ele.className = 'tut-maker-tool-sect'
 
-  ele.querySelector('button[name="edit-keyframe"]')
-    .addEventListener('click', (e) => {
-      if (e.target.textContent === 'create keyframe') createKeyframe()
-      else removeKeyframe()
-    })
+  const res = await fetch('./pages/tools.html')
+  const html = await res.text()
+  ele.innerHTML = html
+
+  // ele.querySelector('button[name="edit-keyframe"]')
+  //   .addEventListener('click', (e) => {
+  //     if (e.target.textContent === 'create keyframe') createKeyframe()
+  //     else removeKeyframe()
+  //   })
 
   ele.querySelector('button[name="load-data"]')
     .addEventListener('click', () => upload())
 
-  const time = ele.querySelector('.tut-maker-row[name="t"]')
-  time.children[1].addEventListener('click', () => goTo('time', -1))
-  time.children[2].addEventListener('change', (e) => goTo('time', e))
-  time.children[3].addEventListener('click', () => goTo('time', 1))
+  // const time = ele.querySelector('.tut-maker-row[name="t"]')
+  // time.children[1].addEventListener('click', () => goTo('time', -1))
+  // time.children[2].addEventListener('change', (e) => goTo('time', e))
+  // time.children[3].addEventListener('click', () => goTo('time', 1))
 
-  const keyframe = ele.querySelector('.tut-maker-row[name="kf"]')
-  keyframe.children[1].addEventListener('click', () => goTo('keyframe', -1))
-  keyframe.children[2].addEventListener('change', (e) => goTo('keyframe', e))
-  keyframe.children[3].addEventListener('click', () => goTo('keyframe', 1))
+  // const keyframe = ele.querySelector('.tut-maker-row[name="kf"]')
+  // keyframe.children[1].addEventListener('click', () => goTo('keyframe', -1))
+  // keyframe.children[2].addEventListener('change', (e) => goTo('keyframe', e))
+  // keyframe.children[3].addEventListener('click', () => goTo('keyframe', 1))
 
   ele.querySelector('button[name="edit-widgets"]')
     .addEventListener('click', () => postMSG('tut-mkr-open-wdgt-mkr'))
@@ -293,10 +256,11 @@ function createFileReader () {
   })
 }
 
-function createHTML () {
+async function createHTML () {
   createFileReader()
   metadataHTML = createMetadataHTML()
-  toolsHTML = createTutorialToolsHTML()
+  toolsHTML = await createTutorialToolsHTML()
+  updateHTML(toolsHTML)
 }
 
 function updateHTML (html) {
@@ -548,5 +512,4 @@ nn.on('message', (e) => {
 nn.on('load', () => {
   postMSG('tut-mkr-opened')
   createHTML()
-  updateHTML(metadataHTML)
 })
