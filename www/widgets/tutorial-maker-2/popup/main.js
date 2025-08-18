@@ -198,36 +198,27 @@ async function createTutorialToolsHTML () {
   ele.querySelector('button[name="edit-widgets"]')
     .addEventListener('click', () => postMSG('tut-mkr-open-wdgt-mkr'))
 
-  ele.querySelector('[name="clear-highlight"]')
-    .addEventListener('click', () => {
-      const ins = ele.querySelectorAll('.tut-maker-row.hl > input')
-      ins.forEach((inp, i) => { inp.value = '' })
-      ele.querySelector('input[title="highlight color"]').value = ''
-      postMSG('tut-mkr-highlight', {})
-      tempHighlight = null
-    })
+  // ele.querySelector('button[name="n-spotlight"]')
+  //   .addEventListener('click', () => {
+  //     postMSG('tut-mkr-spotlight', {})
+  //     tempSpotlight = null
+  //     const q = 'input[placeholder="line numbers (comma separated)"]'
+  //     const v = ele.querySelector(q).value.split(',').map((v) => Number(v))
+  //     if (!isNaN(v[0]) && v[0] !== 0) {
+  //       tempSpotlight = v
+  //       postMSG('tut-mkr-spotlight', v)
+  //     }
+  //   })
+  // ele.querySelector('[name="clear-spotlight"]')
+  //   .addEventListener('click', () => {
+  //     postMSG('tut-mkr-spotlight', {})
+  //     tempSpotlight = null
+  //     const q = 'input[placeholder="line numbers (comma separated)"]'
+  //     ele.querySelector(q).value = ''
+  //   })
 
-  ele.querySelector('button[name="n-spotlight"]')
-    .addEventListener('click', () => {
-      postMSG('tut-mkr-spotlight', {})
-      tempSpotlight = null
-      const q = 'input[placeholder="line numbers (comma separated)"]'
-      const v = ele.querySelector(q).value.split(',').map((v) => Number(v))
-      if (!isNaN(v[0]) && v[0] !== 0) {
-        tempSpotlight = v
-        postMSG('tut-mkr-spotlight', v)
-      }
-    })
-  ele.querySelector('[name="clear-spotlight"]')
-    .addEventListener('click', () => {
-      postMSG('tut-mkr-spotlight', {})
-      tempSpotlight = null
-      const q = 'input[placeholder="line numbers (comma separated)"]'
-      ele.querySelector(q).value = ''
-    })
-
-  ele.querySelector('button[name="netitor-logger"]')
-    .addEventListener('click', () => { uploader.click() })
+  // ele.querySelector('button[name="netitor-logger"]')
+  //   .addEventListener('click', () => { uploader.click() })
 
   ele.querySelector('button[name="download-data"]')
     .addEventListener('click', () => {
