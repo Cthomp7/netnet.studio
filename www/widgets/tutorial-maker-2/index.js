@@ -134,13 +134,12 @@ class TutorialMaker2 extends Widget {
   }
 
   _highlight(h) {
-    if (h)
-      NNE.highlight(h ? h : NULL)
+    NNE.highlight(h?.startLine ? h : null)
   }
 
   _spotlight(v) {
     if (v)
-      NNE.spotlight(v ? v : NULL)
+      NNE.spotlight(v ? v : null)
   }
 
   _getCurrentWidgets () {

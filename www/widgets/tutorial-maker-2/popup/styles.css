@@ -14,10 +14,8 @@ body {
 
 .tut-maker-row {
   display: flex;
-
   align-items: center;
   justify-content: space-between;
-  
   margin-top: 0px !important;
 }
 .tut-maker-label {
@@ -35,6 +33,17 @@ body {
 }
 .tut-maker-row > input.ti {
   width: 34px !important;
+}
+
+.tut-maker-fl-sb {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tut-maker-fl-15 {
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
 
 /*  new css */
@@ -91,7 +100,7 @@ body {
   background-color: var(--netizen-background);
   padding: 6px 15px;
   cursor: pointer;
-  width: 100%;
+  width: fit-content;
   font-size: 1.125rem;
   font-weight: 500;
   transition: background-color var(--element-transition-time) var(--sarah-ease), color var(--element-transition-time) var(--sarah-ease);
@@ -146,6 +155,7 @@ body {
 .tut-maker-stepper-count p {
   margin: 0;
   padding-top: 3px;
+  outline: none;
 }
 .tut-maker-stepper-count.light {
   background-color: var(--netizen-meta);
@@ -209,6 +219,7 @@ body {
 .tut-maker-edit-dd-title > div {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 .tut-maker-edit-dd-p {
   color: var(--netizen-meta);
@@ -249,9 +260,7 @@ body {
   padding: 2px 15px;
   transition: background-color var(--element-transition-time) var(--sarah-ease), color var(--element-transition-time) var(--sarah-ease);
 }
-.tut-maker-delete-cont .tut-maker-button:hover,
-.tut-maker-hghlght-bottom .tut-maker-button:first-of-type:hover,
-.tut-maker-sptlght-bottom-btns .tut-maker-button:first-of-type:hover {
+.tut-maker-button.red:hover {
   border-color: rgb(252, 97, 86);
   background-color: rgb(252, 97, 86);
   color: var(--netizen-background);
@@ -308,9 +317,7 @@ body {
   gap: 15px;
   align-items: center;
 }
-.tut-maker-hghlght-bottom .tut-maker-button,
-.tut-maker-sptlght-bottom .tut-maker-button,
-.tut-maker-sptlght-cont .tut-maker-button {
+.tut-maker-button.red {
   width: fit-content;
   padding: 4px 15px;
   flex-shrink: 0;

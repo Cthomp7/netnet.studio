@@ -165,6 +165,7 @@ async function createTutorialToolsHTML () {
   // keyframe.children[2].addEventListener('change', (e) => goTo('keyframe', e))
   // keyframe.children[3].addEventListener('click', () => goTo('keyframe', 1))
 
+  // edit/close button for keyframe
   ele.querySelector('button[name="edit-kf"]')
     .addEventListener('click', (e) => {
       if (e.target.textContent.trim() === 'edit') {
@@ -176,6 +177,7 @@ async function createTutorialToolsHTML () {
       }
     })
 
+  // opening and closing dropdown edit menus
   Array.from(ele.getElementsByClassName('tut-maker-edit-dd'))
   .forEach(ddEl => {
     ddEl.addEventListener('click', (e) => {
@@ -196,26 +198,6 @@ async function createTutorialToolsHTML () {
   ele.querySelector('button[name="edit-widgets"]')
     .addEventListener('click', () => postMSG('tut-mkr-open-wdgt-mkr'))
 
-  ele.querySelector('button[name="n-highlight"]')
-    .addEventListener('click', () => {
-      postMSG('tut-mkr-highlight', {})
-      tempHighlight = null
-      const obj = {}
-      const ins = ele.querySelectorAll('.tut-maker-row.hl > input')
-      const props = ['startLine', 'startCol', 'endLine', 'endCol']
-      ins.forEach((inp, i) => {
-        if (inp.value !== '' && !isNaN(Number(inp.value))) {
-          obj[props[i]] = Number(inp.value)
-        }
-      })
-      const clr = ele.querySelector('input[title="highlight color"]')
-      if (clr.value !== '') obj.color = clr.value
-      if (obj.startLine) {
-        tempHighlight = obj
-        postMSG('tut-mkr-highlight', obj)
-        console.log("obj: ", obj)
-      }
-    })
   ele.querySelector('[name="clear-highlight"]')
     .addEventListener('click', () => {
       const ins = ele.querySelectorAll('.tut-maker-row.hl > input')
@@ -284,11 +266,198 @@ function createFileReader () {
   })
 }
 
+function initHighlightUI () {
+  document.querySelector('button[name="show-highlight"]')
+    .addEventListener('click', () => {
+      postMSG('tut-mkr-highlight', {})
+      tempHighlight = null
+      const obj = {}
+      const ins = document.querySelectorAll('#line-start, #line-end, #char-start,#char-end')
+      const props = ['startLine', 'endLine', 'startCol', 'endCol']
+      ins.forEach((inp, i) => {
+        if (inp.textContent !== '' && !isNaN(Number(inp.textContent))) {
+          obj[props[i]] = Number(inp.textContent)
+        }
+      })
+      const clr = document.getElementById('tut-maker-hghlght-clr-input')
+      if (clr.textContent !== '') obj.color = clr.textContent
+      if (obj.startLine) {
+        tempHighlight = obj
+        postMSG('tut-mkr-highlight', obj)
+      }
+    })
+
+  document.querySelector('button[name="clear-highlight"]')
+    .addEventListener('click', () => {
+      postMSG('tut-mkr-highlight', {})
+      const ins = document.querySelectorAll('#line-start, #line-end, #char-start,#char-end')
+      ins.forEach((inp) => {
+        if (inp.textContent !== '0') {
+          inp.textContent = '0'
+        }
+      })
+      const clr = document.getElementById('tut-maker-hghlght-clr-input')
+      clr.textContent = ''
+    })
+}
+
+function initStepperCounts(root = document) {
+  const steppers = root.querySelectorAll('.tut-maker-stepper-count') 
+  steppers.forEach(s => {
+    s.addEventListener('click', (e) => {
+      const p = e.target.nodeName === 'DIV' ? e.target.firstChild : e.target
+      ('.tut-maker-stepper-count p[contenteditable]')
+      const isFocused = p === document.activeElement;
+
+      function focusAtEnd(el) {
+        // ensure it has a text node (some browsers need one)
+        if (el.childNodes.length === 0) el.appendChild(document.createTextNode(''));
+
+        el.focus({ preventScroll: true });
+
+        // place caret at the end
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+
+      if (!isFocused) 
+        focusAtEnd(p)
+    })
+  })
+
+  const stepperLeftArrows = root.querySelectorAll('.tut-maker-arrow-l.left, .tut-maker-arrow.left')
+  stepperLeftArrows.forEach(arrow => {
+    arrow.addEventListener('click', () => {
+      const count = arrow.nextElementSibling
+      if (!count || !count.classList.contains('tut-maker-stepper-count')) return
+
+      const p = count.querySelector('p[contenteditable]')
+      if (!p) return
+
+      const pad  = Number(count.dataset.pad ?? p.textContent.trim().length ?? 1)
+      const min  = Number(count.dataset.min ?? 0)
+      const step = Number(count.dataset.step ?? 1)
+
+      let n = parseInt((p.textContent || '').replace(/\D+/g, ''), 10)
+      if (isNaN(n)) n = min
+
+      n = Math.max(min, n - step)
+      p.textContent = String(n).padStart(pad, '0')
+
+      count.dispatchEvent(new CustomEvent('stepperchange', {
+        bubbles: true, detail: { value: n, el: count }
+      }))
+    })
+  })
+
+  const stepperRightArrows = root.querySelectorAll('.tut-maker-arrow-l.right, .tut-maker-arrow.right')
+  stepperRightArrows.forEach(arrow => {
+  arrow.addEventListener('click', () => {
+    const count = arrow.previousElementSibling // always previous sibling
+    if (!count || !count.classList.contains('tut-maker-stepper-count')) return
+
+    const p = count.querySelector('p[contenteditable]')
+    if (!p) return
+
+    const pad  = Number(count.dataset.pad  ?? p.textContent.trim().length ?? 1)
+    const min  = Number(count.dataset.min  ?? 0)
+    const max  = Number(count.dataset.max  ?? Infinity)
+    const step = Number(count.dataset.step ?? 1)
+
+    let n = parseInt((p.textContent || '').replace(/\D+/g, ''), 10)
+    if (isNaN(n)) n = min
+
+    n = Math.min(max, n + step)                 // increment, clamp to max
+    p.textContent = String(n).padStart(pad, '0')
+
+    count.dispatchEvent(new CustomEvent('stepperchange', {
+      bubbles: true, detail: { value: n, el: count }
+    }))
+  })
+})
+
+  const steppersP = root.querySelectorAll('.tut-maker-stepper-count p[contenteditable]')
+  steppersP.forEach(p => {
+    const container = p.closest('.tut-maker-stepper-count')
+    const min = container?.dataset.min !== undefined ? parseInt(container.dataset.min, 10) : 0
+    const max = container?.dataset.max !== undefined ? parseInt(container.dataset.max, 10) : Infinity
+
+    // Helpers
+    const clamp = (n) => Math.max(min, Math.min(max, n))
+    const sanitize = () => {
+      const digitsOnly = p.textContent.replace(/\D+/g, '')
+      const value = clamp(digitsOnly === '' ? min : parseInt(digitsOnly, 10))
+      const shown = String(value)
+      if (p.textContent !== shown) {
+        p.textContent = shown
+        placeCaretAtEnd(p)
+      }
+      dispatch(value)
+      return value
+    }
+    const dispatch = (value) => {
+      container.dispatchEvent(new CustomEvent('stepperchange', {
+        bubbles: true,
+        detail: { value, el: container }
+      }))
+    }
+    const placeCaretAtEnd = (el) => {
+      const r = document.createRange()
+      r.selectNodeContents(el)
+      r.collapse(false)
+      const s = window.getSelection()
+      s.removeAllRanges()
+      s.addRange(r)
+    }
+
+    // Prevent non-digits as you type
+    p.addEventListener('beforeinput', (e) => {
+      console.log(e.inputType === 'insertText')
+      if (e.inputType === 'insertText' && !/^[0-9]$/.test(e.data)) e.preventDefault()
+    })
+
+    // Sanitize on input (covers typing, delete, etc.)
+    p.addEventListener('input', sanitize)
+
+    // Clean up on blur (empty -> min)
+    p.addEventListener('blur', sanitize)
+
+    // Handle paste: keep digits only
+    p.addEventListener('paste', (e) => {
+      e.preventDefault()
+      const t = (e.clipboardData || window.clipboardData).getData('text') || ''
+      const digits = (t.match(/\d+/g) || []).join('')
+      document.execCommand('insertText', false, digits) // simple & compatible
+    })
+
+    // Arrow up/down to increment/decrement
+    p.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        const cur = sanitize()
+        const next = clamp(cur + (e.key === 'ArrowUp' ? 1 : -1))
+        p.textContent = String(next)
+        placeCaretAtEnd(p)
+        dispatch(next)
+      }
+    })
+
+    sanitize()
+  })
+}
+
 async function createHTML () {
   createFileReader()
   metadataHTML = createMetadataHTML()
   toolsHTML = await createTutorialToolsHTML()
   updateHTML(toolsHTML)
+  initStepperCounts()
+  initHighlightUI()
 }
 
 function updateHTML (html) {
