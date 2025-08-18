@@ -51,7 +51,7 @@ class TutorialMaker2 extends Widget {
     this.popup = window.open(
       './widgets/tutorial-maker-2/popup/index.html',
       'tutorial-maker-popout',
-      'width=600,height=400'
+      'width=564,height=960'
     )
 
     this.popup.addEventListener('load', () => {
