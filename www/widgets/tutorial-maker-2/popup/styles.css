@@ -44,7 +44,7 @@ body {
   flex-direction: column;
   padding: 15px;
   align-items: center;
-  overflow-y: scroll;
+  overflow-y: auto;
   height: 100vh;
 }
 .tut-maker-tool-sect::-webkit-scrollbar-track {
@@ -68,6 +68,9 @@ body {
   border-radius: 18px;
   max-width: 550px;
   width: 100%;
+}
+.tut-maker-kf.opened .tut-maker-edit-menu {
+  display: flex;
 }
 .tut-maker-kf-header {
   display: flex;
@@ -182,12 +185,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 15px;
-}
-.tut-maker-edit-menu hr {
-  border: 1px solid var(--netizen-comment);
-  height: 2px;
-  width: 100%;
-  margin-bottom: 0;
+  display: none;
 }
 .tut-maker-edit-dd {
   width: 100%;
@@ -195,11 +193,18 @@ body {
   border-radius: 9px;
   padding: 13px;
   cursor: pointer;
+  overflow-y: hidden;
+  height: 49.2px;
+}
+.tut-maker-edit-dd.opened {
+  height: auto;
+  cursor: default;
 }
 .tut-maker-edit-dd-title {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  cursor: pointer;
 }
 .tut-maker-edit-dd-title > div {
   display: flex;
@@ -271,12 +276,17 @@ body {
   display: flex;
   gap: 15px;
 }
+.tut-maker-edit-dd.opened .tut-maker-stepper-count.start::before,
+.tut-maker-edit-dd.opened .tut-maker-stepper-count.end::before {
+  opacity: 1;
+}
 .tut-maker-stepper-count.start::before {
   content: "start";
   position: absolute;
   top: -22px;
   color: var(--netizen-meta);
   font-size: 0.75rem;
+  opacity: 0;
 }
 .tut-maker-stepper-count.end::before {
   content: "end";
@@ -284,6 +294,7 @@ body {
   top: -22px;
   color: var(--netizen-meta);
   font-size: 0.75rem;
+  opacity: 0;
 }
 .tut-maker-vrtl-line {
   background: var(--netizen-comment);

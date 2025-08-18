@@ -165,6 +165,34 @@ async function createTutorialToolsHTML () {
   // keyframe.children[2].addEventListener('change', (e) => goTo('keyframe', e))
   // keyframe.children[3].addEventListener('click', () => goTo('keyframe', 1))
 
+  ele.querySelector('button[name="edit-kf"]')
+    .addEventListener('click', (e) => {
+      if (e.target.textContent.trim() === 'edit') {
+        e.target.textContent = 'close';
+        ele.querySelector('.tut-maker-kf').classList.add('opened');
+      } else {
+        e.target.textContent = 'edit';
+        ele.querySelector('.tut-maker-kf').classList.remove('opened');
+      }
+    })
+
+  Array.from(ele.getElementsByClassName('tut-maker-edit-dd'))
+  .forEach(ddEl => {
+    ddEl.addEventListener('click', (e) => {
+      const dd = e.target.closest('.tut-maker-edit-dd');
+      const height = getComputedStyle(dd).height;
+
+      if (height === '49.1875px') {
+        dd.classList.add('opened')
+      } else if (
+        e.target.className === 'tut-maker-edit-dd-title' &&
+        height != '49.1875px'
+      ) {
+        dd.classList.remove('opened')
+      }
+    });
+  });
+
   ele.querySelector('button[name="edit-widgets"]')
     .addEventListener('click', () => postMSG('tut-mkr-open-wdgt-mkr'))
 
