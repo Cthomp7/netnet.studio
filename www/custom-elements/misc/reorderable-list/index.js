@@ -130,11 +130,13 @@ class ReorderableList extends HTMLElement {
       info.querySelector('.rl-info-menu').style.paddingLeft = '0'
     })
 
-    step.querySelector('.rl-down-p').addEventListener('click', () => {
+    step.querySelector('.rl-down-p').addEventListener('click', (e) => {
+      e.stopPropagation()
       this.moveSteps(step)
     })
 
-    step.querySelector('.rl-up-p').addEventListener('click', () => {
+    step.querySelector('.rl-up-p').addEventListener('click', (e) => {
+      e.stopPropagation()
       this.moveSteps(step, 'up')
     })
 
